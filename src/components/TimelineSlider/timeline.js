@@ -252,3 +252,17 @@ export const COMPACT_RANGE_GAP = 0.1
 export function thinPresets(presets) {
   return presets.filter((_, i) => i === 0 || i === presets.length - 1 || i % 2 === 0)
 }
+
+// Which markers get the accent colour: of the markers that lie inside the
+// selected span [lo, hi] (track units), only the FIRST and the LAST — the
+// span's start and end. Markers in between stay neutral, so the accent
+// reads as a pair of bookends instead of a solid run. Returns a Set of
+// indices into `positions`; empty when no marker is inside the span.
+export function spanEnds(positions, lo, hi, eps = 1e-9) {
+  const inside = []
+  positions.forEach((p, i) => {
+    if (p >= lo - eps && p <= hi + eps) inside.push(i)
+  })
+  if (inside.length === 0) return new Set()
+  return new Set([inside[0], inside[inside.length - 1]])
+}

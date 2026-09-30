@@ -1,6 +1,6 @@
 {
   "name": "piui",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "piUI — a small, opinionated UI design guide and component kit. Universal pieces, built once, used across apps.",
   "type": "module",
   "sideEffects": [

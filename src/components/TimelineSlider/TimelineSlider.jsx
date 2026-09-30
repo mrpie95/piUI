@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  presetsFor, thinPresets, posOf, monthsAt, snap, stepStop, formatSpan, PRESETS,
+  presetsFor, thinPresets, spanEnds, posOf, monthsAt, snap, stepStop, formatSpan, PRESETS,
   UNITS, fromMonths, commitWindow, commitRange, formatRange,
   clampHandle, MIN_RANGE_GAP, COMPACT_RANGE_GAP, visibleLabels, swell,
 } from './timeline.js'
@@ -332,14 +332,15 @@ export default function TimelineSlider({
   }, [stopPos, compact])
 
   // Colouring. A dot is "filled" when it lies inside the chosen span.
-  // Preset markers carry the full accent (or a clear grey outside the
-  // span). The small grid dots are deliberately quieter — a soft tint of
-  // the accent — so they don't fight the markers for attention; they
-  // brighten only as the pointer comes near (`t` runs 0 → 1 with the
-  // swell), which keeps the hovered point the focus.
+  // Of the preset markers inside the span only the FIRST and LAST carry
+  // the full accent — the span's start and end, like bookends; the ones
+  // between (and all outside it) stay a neutral grey. The small grid dots
+  // are deliberately quieter — a soft tint of the accent — so they don't
+  // fight the markers for attention; they brighten only as the pointer
+  // comes near (`t` runs 0 → 1 with the swell), which keeps the hovered
+  // point the focus.
   const lo = isRange ? nearPos : 0
   const filled = (p) => p >= lo - 1e-9 && p <= shownPos + 1e-9
-  const markerColor = (p) => (filled(p) && !disabled ? 'var(--pi-accent)' : 'var(--pi-text-dim)')
   const gridColor = (p, t) =>
     filled(p) && !disabled
       ? `color-mix(in srgb, var(--pi-accent) ${Math.round(30 + 45 * t)}%, var(--pi-bg-elev))`
@@ -351,6 +352,8 @@ export default function TimelineSlider({
     { p: 1, months: null, label: 'All' },
   ]
   // The compact track is shorter, so labels need a bigger share of it.
+  const endMarkers = spanEnds(drawn.map((d) => d.p), lo, shownPos)
+  const markerColor = (i) => (endMarkers.has(i) && !disabled ? 'var(--pi-accent)' : 'var(--pi-text-dim)')
   const labelled = visibleLabels(drawn.map((d) => d.p), compact ? 0.16 : 0.09)
   const isActiveStop = (m) => (isRange ? m === far || (m != null && m === near) : isAll ? m == null : far === m)
 
@@ -433,7 +436,7 @@ export default function TimelineSlider({
                 className="pi-tl__marker"
                 style={{
                   left: `calc(${d.p * 100}% - 4.5px)`,
-                  background: markerColor(d.p),
+                  background: markerColor(i),
                   transform: `scale(${k})`,
                 }}
               />

@@ -31,7 +31,7 @@ These are the rules every piUI component follows. If a new component breaks one,
 piUI is a normal npm package, installed straight from GitHub and pinned to a release tag.
 
 ```bash
-npm install "git+https://github.com/mrpie95/piUI.git#v0.2.0"
+npm install "git+https://github.com/mrpie95/piUI.git#v0.3.0"
 ```
 
 Use the **`git+https://`** form rather than the `github:` shorthand: the shorthand records an SSH URL in `package-lock.json`, which fails in CI and on any machine without a GitHub SSH key.
@@ -137,12 +137,12 @@ piUI uses [semver](https://semver.org). Apps pin a tag, so a release never chang
 
 ```bash
 # 1. tests + build pass, CHANGELOG.md updated, package.json version bumped
-git commit -am "v0.2.0: <what changed>"
-git tag v0.2.0
+git commit -am "v0.4.0: <what changed>"
+git tag v0.4.0
 git push origin main --tags
 ```
 
-Apps then upgrade with `npm install "git+https://github.com/mrpie95/piUI.git#v0.2.0"`.
+Apps then upgrade with `npm install "git+https://github.com/mrpie95/piUI.git#v0.4.0"`.
 
 - **Patch** (`0.1.x`): fixes, no API change.
 - **Minor** (`0.x.0`): new component or backwards-compatible option.

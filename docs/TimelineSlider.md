@@ -126,8 +126,9 @@ const visible = rows.filter(
 Dragging within a few percent of a stop **locks onto it**. Between stops the value is free, rounded to whole weeks under three months and half-months above, so the readout never flickers decimals. In range mode the newer handle also snaps to **now**.
 
 ### Dotted track and colour
-- The track is a row of small dots with larger dots at each preset. Dots **inside** the selection are tinted with the accent; the rest are quiet.
-- Preset markers carry the full accent, so they stay the focus. The small dots are a soft tint that only brightens as your pointer comes near.
+- The track is a row of small dots with larger dots at each preset. The small dots **inside** the selection are tinted with the accent (this is what shows the span filling); the rest are quiet.
+- **Only the span's start and end are accent-coloured.** Of the preset markers inside the selection, just the **first and last** carry the full accent — like bookends — and the markers in between stay a neutral grey. So "last 12 months" reads `1M ● · 3M ○ · 6M ○ · 1Y ●`, and a range from 3M to 1Y reads `3M ● · 6M ○ · 1Y ●`. A selection that touches a single marker accents just that one.
+- The small dots are a soft tint that only brightens as your pointer comes near, so they never compete with the two accented markers.
 
 ### Dock-style hover swell
 Hovering the track magnifies the dots: the one under the pointer swells most and neighbours follow on a smooth falloff, like the macOS Dock. Skipped when the user prefers reduced motion.

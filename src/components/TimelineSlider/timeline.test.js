@@ -21,6 +21,7 @@ import {
   MIN_RANGE_GAP,
   COMPACT_RANGE_GAP,
   thinPresets,
+  spanEnds,
 } from './timeline.js'
 
 describe('presetsFor', () => {
@@ -341,5 +342,35 @@ describe('compact size', () => {
   })
   it('the compact gap is wider than the default one', () => {
     expect(COMPACT_RANGE_GAP).toBeGreaterThan(MIN_RANGE_GAP)
+  })
+})
+
+describe('spanEnds', () => {
+  const pos = [0.06, 0.19, 0.38, 0.75, 1] // 1M 3M 6M 1Y All
+  it('keeps only the first and last marker inside the span', () => {
+    expect([...spanEnds(pos, 0, 0.75)].sort()).toEqual([0, 3]) // 1M … 1Y
+    expect([...spanEnds(pos, 0, 1)].sort()).toEqual([0, 4]) // 1M … All
+  })
+  it('leaves the markers in between neutral', () => {
+    const ends = spanEnds(pos, 0, 0.75)
+    expect(ends.has(1)).toBe(false)
+    expect(ends.has(2)).toBe(false)
+  })
+  it('works for a range in the middle of the track', () => {
+    expect([...spanEnds(pos, 0.19, 0.75)].sort()).toEqual([1, 3]) // 3M … 1Y
+  })
+  it('a single marker inside the span is both its start and end', () => {
+    expect([...spanEnds(pos, 0, 0.1)]).toEqual([0])
+  })
+  it('is empty when no marker lies inside the span', () => {
+    expect(spanEnds(pos, 0.4, 0.7).size).toBe(0)
+    expect(spanEnds([], 0, 1).size).toBe(0)
+  })
+  it('treats the span edges as inclusive', () => {
+    expect([...spanEnds(pos, 0.38, 0.75)].sort()).toEqual([2, 3])
+  })
+  it('handles a span that is not aligned with any marker', () => {
+    // thumb between 6M and 1Y: the run 1M..6M ends at 6M
+    expect([...spanEnds(pos, 0, 0.6)].sort()).toEqual([0, 2])
   })
 })

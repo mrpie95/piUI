@@ -2,6 +2,11 @@
 
 All notable changes to piUI. Versions follow [semver](https://semver.org); apps pin a git tag (`git+https://github.com/mrpie95/piUI.git#vX.Y.Z`).
 
+## 0.3.0 — bookended markers
+
+- **TimelineSlider:** of the preset markers inside the selection, only the **first and last** are accent-coloured; the ones in between are neutral grey. Previously every marker inside the span was accented, which read as a solid purple run. Applies to window and range mode and to both sizes; the small background dots still tint to show the span.
+- New pure helper `spanEnds` (with tests) decides which markers get the accent.
+
 ## 0.2.0 — compact size
 
 - **TimelineSlider `size` prop** — `'full'` (default, unchanged) or `'compact'`, chosen by the designer rather than guessed from the container.
