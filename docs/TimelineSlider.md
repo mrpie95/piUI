@@ -7,6 +7,8 @@ A pill-shaped time picker. A dotted track with preset stops (**1M · 3M · 6M ·
 
 Hover the dots and they swell like the macOS Dock; click the track and the handle drifts there; hover the readout on the right and it slides open into typed fields. It is a controlled component with plain CSS and no dependencies beyond React 19.
 
+It comes in two sizes — **full** and **compact** — and the designer picks which one (see [Choosing a size](#choosing-a-size)).
+
 **Use it when** the user picks a slice of history that ends "now" or somewhere in the past — charts, ledgers, reports, filters. **Don't use it** for picking calendar dates (no day/month grid here) or for values that aren't time.
 
 ---
@@ -71,6 +73,7 @@ function Example() {
 | `onModeChange` | `() => void` | — | Optional. When provided, renders the mode-toggle icon; you switch `mode` and convert `value`. |
 | `presets` | `{ months: number, label: string }[]` | 1M, 3M, 6M, 1Y | Override the stop list. Stops longer than the history are hidden automatically. |
 | `label` | `string` | `'Time window'` | Accessible name for the control (used in every `aria-label`). |
+| `size` | `'full' \| 'compact'` | `'full'` | The designer's choice of layout — see [Choosing a size](#choosing-a-size). |
 
 The component is **disabled** automatically when there isn't enough history to choose between (`maxMonths` ≈ one month or less): the track greys out and the readout stops opening.
 
@@ -149,6 +152,33 @@ With `onModeChange` set, a small icon at the left of the pill switches between w
 
 ---
 
+## Choosing a size
+
+```jsx
+<TimelineSlider size="full" ... />     // the default
+<TimelineSlider size="compact" ... />  // for tight toolbars
+```
+
+The size is **a design decision, not something the component guesses** from its container. Pick `compact` where the layout is tight — a dense toolbar, a narrow side panel, a card header that already holds several controls — and leave it `full` everywhere else.
+
+| | `full` | `compact` |
+| --- | --- | --- |
+| Track width | 200px | 128px |
+| Pill width (window mode, typical) | ~310px | ~220px |
+| Time points (stops) | 1M · 3M · 6M · 1Y · All | **1M · 6M · 1Y · All** (3M dropped) |
+| Background dots | 24 | 12 |
+| Stop labels | 11px, thin out at 9% of the track | 10px, thin out at 16% of the track |
+| Minimum gap between range handles | 6% of the track (12px) | 10% of the track (≈13px) |
+| Type size in the readout / editor | 12px | 11px |
+
+**Everything works in both sizes** — window mode, range mode (two handles), snapping, the hover swell, the wave and drift animations, the typed editor with its hover peek, the keyboard shortcuts and the accessibility roles. The handles, dots and stops keep their size in `compact`, so they stay as easy to hit; only the spacing and the number of time points change.
+
+**How the time points are thinned.** The compact slider keeps the first and last stops and every second one between them (`[1M, 3M, 6M, 1Y]` → `[1M, 6M, 1Y]`). With custom `presets` the same rule applies, so pass them in order from shortest to longest. A value that sits on a dropped stop (for example `3` months, typed or set by your app) is still valid — it simply has no marker of its own.
+
+**Handles never overlap.** In range mode the two handles are 12px wide, so each size keeps them at least a handle-width apart. Dragging the newer handle towards the older one carries it right up to that limit and stops; it doesn't stick short of it.
+
+---
+
 ## Keyboard and accessibility
 
 | Key | Window mode | Range handle (focused) |
@@ -170,13 +200,14 @@ Arrow keys **hop between stops** rather than crawling along the track. A handle 
 
 ## Theming and sizing
 
-The slider reads only the [`--pi-*` tokens](../README.md#theming). Its **pill is fixed height (40px)** and the **track is 200px wide**. Dots and labels are positioned in percentages, so the width can be overridden:
+The slider reads only the [`--pi-*` tokens](../README.md#theming). Its **pill is a fixed height** (40px full, 36px compact) and the **track is a fixed width** (200px full, 128px compact) — prefer `size` over overriding these. Dots and labels are positioned in percentages, so the width can still be overridden for a one-off:
 
 ```css
-.pi-tl__track { width: 260px; }
+.pi-tl__track { width: 260px; }                /* full */
+.pi-tl--compact .pi-tl__track { width: 160px; }  /* compact */
 ```
 
-Useful class names for overrides: `pi-tl` (pill), `pi-tl__track`, `pi-tl__dot` (small dots), `pi-tl__marker` (preset dots), `pi-tl__label`, `pi-tl__thumb` / `pi-tl__handle`, `pi-tl__readout`, `pi-tl__editor`.
+Useful class names for overrides: `pi-tl` (pill; `pi-tl--compact` when `size="compact"`), `pi-tl__track`, `pi-tl__dot` (small dots), `pi-tl__marker` (preset dots), `pi-tl__label`, `pi-tl__thumb` / `pi-tl__handle`, `pi-tl__readout`, `pi-tl__editor`.
 
 Behaviour constants (swell strength, wave duration, dot count, peek delay) are named constants at the top of `TimelineSlider.jsx` (`GRID`, `GRID_AMP`, `WAVE_MS`, `PEEK_CLOSE_MS`) and in `timeline.js` (`PRESETS`, `KNEE_MONTHS`, `KNEE_POS`).
 
@@ -213,5 +244,6 @@ The scale and snapping functions (`posOf`, `monthsAt`, `snap`, `stepStop`, `swel
 - **`mode` and `value` must agree.** In range mode `value` must be `{ near, far }`; in window mode a number or `null`. Convert when toggling (see the quick start).
 - **`null` means different ends.** In window mode `value === null` is "All"; in range mode `far: null` is "to the start of history" and `near` is never `null`.
 - **`maxMonths` is about your data, not the calendar.** A history shorter than ~1 month disables the control; only presets comfortably shorter than the history are offered.
+- **`size` is not automatic.** The slider never switches to compact by itself. If you want it to adapt to width, decide in your app (a media query, a container width) and pass `size` yourself.
 - **React 19 only** (the collapsed editor uses the `inert` attribute).
 - **Hidden tabs pause animations.** Browsers don't run animation frames in a background tab, so the wave won't advance until the tab is visible again. Nothing breaks; the value is always correct.

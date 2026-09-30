@@ -1,6 +1,15 @@
 # Changelog
 
-All notable changes to piUI. Versions follow [semver](https://semver.org); apps pin a git tag (`github:mrpie95/piUI#vX.Y.Z`).
+All notable changes to piUI. Versions follow [semver](https://semver.org); apps pin a git tag (`git+https://github.com/mrpie95/piUI.git#vX.Y.Z`).
+
+## 0.2.0 — compact size
+
+- **TimelineSlider `size` prop** — `'full'` (default, unchanged) or `'compact'`, chosen by the designer rather than guessed from the container.
+  - Compact: 128px track, half the background dots, fewer time points (3M is dropped), smaller labels and type.
+  - Every feature works in both sizes, including the two-handle range mode.
+- **Range handles never overlap.** The minimum gap is now a full handle-width in each size (6% of the full track, 10% of the compact one). Previously the full-size gap (4%) let the 12px handles overlap slightly.
+- **Fix:** pushing one range handle into the other now carries it right up to the limit instead of leaving it stuck short of it.
+- Docs: new "Choosing a size" section; playground shows both sizes.
 
 ## 0.1.0 — first release
 

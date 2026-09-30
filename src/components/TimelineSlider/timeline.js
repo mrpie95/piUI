@@ -197,14 +197,17 @@ export function swell(pos, hover, amp = 1.2, sigma = 0.07) {
 // (null = the start of the history). A plain window "last X" is just
 // { near: 0, far: X }.
 
-// Smallest gap kept between the two handles, in track units.
-export const MIN_RANGE_GAP = 0.04
+// Smallest gap kept between the two handles, in track units: one handle
+// width (12px) on the 200px full-size track, so they never overlap.
+export const MIN_RANGE_GAP = 0.06
 
 // Keep a proposed handle position clear of the other handle.
-// `which` is the handle being moved: 'near' or 'far'.
-export function clampHandle(which, pos, other) {
+// `which` is the handle being moved: 'near' or 'far'. `gap` is how
+// close they may get (a compact slider needs a bigger share of its
+// shorter track).
+export function clampHandle(which, pos, other, gap = MIN_RANGE_GAP) {
   const p = Math.min(1, Math.max(0, pos))
-  return which === 'near' ? Math.min(p, other - MIN_RANGE_GAP) : Math.max(p, other + MIN_RANGE_GAP)
+  return which === 'near' ? Math.min(p, other - gap) : Math.max(p, other + gap)
 }
 
 // Label for a range: "Last 3 mo" when it reaches now, otherwise
@@ -233,4 +236,19 @@ export function commitRange(nearN, nearUnit, farN, farUnit, maxMonths) {
   if (near == null || far == null) return undefined
   if (far - near < 1 / DAYS_PER_MONTH) return undefined
   return { near, far: far >= maxMonths ? null : far }
+}
+
+// ── Compact size ───────────────────────────────────────────────────
+// The compact slider is chosen by the designer (`size="compact"`), never
+// guessed from the container. It has a shorter track and fewer time
+// points, so:
+
+// Handles are ~12px wide, so on the compact track (~128px) they need a
+// larger share of it to stay visually apart.
+export const COMPACT_RANGE_GAP = 0.1
+
+// Fewer time points for the compact slider: keep the first and last
+// stops and every second one between — [1M, 3M, 6M, 1Y] → [1M, 6M, 1Y].
+export function thinPresets(presets) {
+  return presets.filter((_, i) => i === 0 || i === presets.length - 1 || i % 2 === 0)
 }

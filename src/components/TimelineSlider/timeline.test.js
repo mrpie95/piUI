@@ -19,6 +19,8 @@ import {
   rangeBounds,
   commitRange,
   MIN_RANGE_GAP,
+  COMPACT_RANGE_GAP,
+  thinPresets,
 } from './timeline.js'
 
 describe('presetsFor', () => {
@@ -320,5 +322,24 @@ describe('commitRange', () => {
     expect(commitRange('-1', 'months', '6', 'months', 36)).toBeUndefined()
     expect(commitRange('1', 'months', '', 'months', 36)).toBeUndefined()
     expect(commitRange('x', 'months', '6', 'months', 36)).toBeUndefined()
+  })
+})
+
+describe('compact size', () => {
+  it('drops 3M from the default presets, keeping first and last', () => {
+    expect(thinPresets(PRESETS).map((p) => p.label)).toEqual(['1M', '6M', '1Y'])
+  })
+  it('thins longer lists and leaves short ones alone', () => {
+    const five = ['a', 'b', 'c', 'd', 'e'].map((label, i) => ({ months: i + 1, label }))
+    expect(thinPresets(five).map((p) => p.label)).toEqual(['a', 'c', 'e'])
+    expect(thinPresets(PRESETS.slice(0, 2)).map((p) => p.label)).toEqual(['1M', '3M'])
+    expect(thinPresets([])).toEqual([])
+  })
+  it('clampHandle honours a custom gap', () => {
+    expect(clampHandle('near', 0.9, 0.5, COMPACT_RANGE_GAP)).toBeCloseTo(0.5 - COMPACT_RANGE_GAP, 9)
+    expect(clampHandle('far', 0.1, 0.5, COMPACT_RANGE_GAP)).toBeCloseTo(0.5 + COMPACT_RANGE_GAP, 9)
+  })
+  it('the compact gap is wider than the default one', () => {
+    expect(COMPACT_RANGE_GAP).toBeGreaterThan(MIN_RANGE_GAP)
   })
 })

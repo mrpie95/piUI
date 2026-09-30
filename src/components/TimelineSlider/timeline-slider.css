@@ -270,3 +270,48 @@
   padding-right: 0;
   opacity: 0;
 }
+
+/* ── compact size (size="compact") ──────────────────────────────────
+   A shorter track and smaller type for tight toolbars. The dots, stops
+   and handles keep their size so they stay easy to hit; the component
+   also draws fewer dots and time points (see TimelineSlider.jsx).
+   Selectors are written to out-rank the open/closed editor rules above. */
+.pi-tl--compact {
+  gap: 12px;
+  height: 36px;
+  padding: 0 12px 0 14px;
+}
+.pi-tl--compact .pi-tl__track {
+  width: 128px;
+}
+.pi-tl--compact .pi-tl__mode {
+  width: 22px;
+  height: 22px;
+  margin: 0 -6px;
+}
+.pi-tl--compact .pi-tl__label {
+  font-size: 10px;
+}
+.pi-tl--compact .pi-tl__readout {
+  font-size: 11px;
+}
+.pi-tl--compact .pi-tl__readout:not([data-open='true']) {
+  min-width: 28px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+.pi-tl--compact .pi-tl__num {
+  width: 40px;
+  padding: 2px 4px;
+  font-size: 11px;
+}
+.pi-tl--compact .pi-tl__unit,
+.pi-tl--compact .pi-tl__sep {
+  font-size: 11px;
+}
+.pi-tl--compact .pi-tl__editor[data-open='true'] {
+  max-width: 130px;
+}
+.pi-tl--compact .pi-tl__editor[data-open='true'][data-range='true'] {
+  max-width: 250px;
+}

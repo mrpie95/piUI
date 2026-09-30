@@ -14,7 +14,7 @@ function Section({ title, note, children }) {
   )
 }
 
-function TimelineDemo() {
+function TimelineDemo({ size }) {
   const [maxMonths, setMaxMonths] = useState(30)
   const [mode, setMode] = useState('window')
   const [span, setSpan] = useState(12)
@@ -33,6 +33,7 @@ function TimelineDemo() {
     <>
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
         <TimelineSlider
+          size={size}
           mode={mode}
           value={mode === 'range' ? range : span}
           onChange={mode === 'range' ? setRange : setSpan}
@@ -61,10 +62,16 @@ function App() {
         </button>
       </header>
       <Section
-        title="TimelineSlider"
-        note="Window (“last X”) and range (“X ago to Y ago”) on one dotted track. Hover the dots, click the track, hover the readout on the right."
+        title='TimelineSlider size="full"'
+        note="Window (“last X”) and range (“X ago to Y ago”) on one dotted track. Hover the dots, click the track, hover the readout on the right. The toggle at the left switches to two handles."
       >
-        <TimelineDemo />
+        <TimelineDemo size="full" />
+      </Section>
+      <Section
+        title='TimelineSlider size="compact"'
+        note="For tight toolbars: a shorter track, half the dots and fewer time points (3M is dropped). Both modes work the same, including the two-handle range."
+      >
+        <TimelineDemo size="compact" />
       </Section>
     </div>
   )

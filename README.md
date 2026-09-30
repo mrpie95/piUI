@@ -6,7 +6,7 @@ piUI is where a UI element lives **after** it has proven itself in a real app. E
 
 | Component | What it is | Docs |
 | --- | --- | --- |
-| **TimelineSlider** | A pill-shaped time picker: a dotted track with preset stops, a "last X" window or an "X ago → Y ago" range, dock-style hover swell, typed entry. | [docs/TimelineSlider.md](docs/TimelineSlider.md) |
+| **TimelineSlider** | A pill-shaped time picker: a dotted track with preset stops, a "last X" window or an "X ago → Y ago" range, dock-style hover swell, typed entry. Two sizes: `full` and `compact`. | [docs/TimelineSlider.md](docs/TimelineSlider.md) |
 
 Run `npm run dev` to see every component live in the [playground](playground/main.jsx).
 
@@ -31,10 +31,12 @@ These are the rules every piUI component follows. If a new component breaks one,
 piUI is a normal npm package, installed straight from GitHub and pinned to a release tag.
 
 ```bash
-npm install github:mrpie95/piUI#v0.1.0
+npm install "git+https://github.com/mrpie95/piUI.git#v0.2.0"
 ```
 
-It builds itself on install (`prepare` runs `vite build`). It needs **React 19** (peer dependency).
+Use the **`git+https://`** form rather than the `github:` shorthand: the shorthand records an SSH URL in `package-lock.json`, which fails in CI and on any machine without a GitHub SSH key.
+
+It builds itself on install (`prepare` runs `vite build`, about 6 seconds). It needs **React 19** (peer dependency).
 
 ```jsx
 import { useState } from 'react'
@@ -140,7 +142,7 @@ git tag v0.2.0
 git push origin main --tags
 ```
 
-Apps then upgrade with `npm install github:mrpie95/piUI#v0.2.0`.
+Apps then upgrade with `npm install "git+https://github.com/mrpie95/piUI.git#v0.2.0"`.
 
 - **Patch** (`0.1.x`): fixes, no API change.
 - **Minor** (`0.x.0`): new component or backwards-compatible option.

@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  presetsFor, posOf, snap, stepStop, formatSpan, PRESETS,
+  presetsFor, thinPresets, posOf, monthsAt, snap, stepStop, formatSpan, PRESETS,
   UNITS, fromMonths, commitWindow, commitRange, formatRange,
-  clampHandle, MIN_RANGE_GAP, visibleLabels, swell,
+  clampHandle, MIN_RANGE_GAP, COMPACT_RANGE_GAP, visibleLabels, swell,
 } from './timeline.js'
 import './timeline-slider.css'
 
@@ -26,6 +26,11 @@ import './timeline-slider.css'
 //   maxMonths     length of the available history; sizes the track
 //   presets       optional override of the preset list
 //   label         accessible name for the control
+//   size          'full' (default) or 'compact' — the designer's choice,
+//                 never guessed from the container. Compact has a shorter
+//                 track, half the dots and fewer time points (the 3M stop
+//                 is dropped), and keeps the two range handles further
+//                 apart; every behaviour below still works in both modes.
 //
 // The track is two straight lines meeting at 1Y (see timeline.js):
 // 0 → 1Y fills the first three quarters, 1Y → All the last quarter.
@@ -52,6 +57,7 @@ import './timeline-slider.css'
 // applies, Esc cancels; a span as long as the history becomes "All".
 const RES = 1000
 const GRID = 24 // background dots across the track
+const GRID_COMPACT = 12
 // A grid dot this close to a stop (in track units) is left out so
 // the stop's bigger dot doesn't sit on top of a small one.
 const CLEARANCE = 0.035
@@ -69,9 +75,16 @@ export default function TimelineSlider({
   maxMonths,
   presets = PRESETS,
   label = 'Time window',
+  size = 'full',
 }) {
   const isRange = mode === 'range'
-  const stops = useMemo(() => presetsFor(maxMonths, presets), [maxMonths, presets])
+  const compact = size === 'compact'
+  // How close the two range handles may get, in track units.
+  const gap = compact ? COMPACT_RANGE_GAP : MIN_RANGE_GAP
+  const stops = useMemo(() => {
+    const fit = presetsFor(maxMonths, presets)
+    return compact ? thinPresets(fit) : fit
+  }, [maxMonths, presets, compact])
   const stopPos = useMemo(() => stops.map((p) => posOf(p.months, maxMonths)), [stops, maxMonths])
   // Normalise both modes to an edge pair in months ago.
   const near = isRange ? value?.near || 0 : 0
@@ -238,14 +251,22 @@ export default function TimelineSlider({
   const trackRef = useRef(null)
   const moveHandle = (e, which) => {
     const r = (trackRef.current || e.currentTarget).getBoundingClientRect()
-    const p = clampHandle(which, (e.clientX - r.left) / r.width, which === 'near' ? pos : nearPos)
-    const months = snap(p, maxMonths, stops, 0.035, which === 'near')
+    const p = clampHandle(which, (e.clientX - r.left) / r.width, which === 'near' ? pos : nearPos, gap)
+    let months = snap(p, maxMonths, stops, 0.035, which === 'near')
+    // Snapping can nudge a handle a hair past its limit (it may lock onto
+    // a stop on the far side of the gap). Rather than refuse the move and
+    // leave the handle stuck short of the boundary, park it exactly on the
+    // boundary — rounded a tenth of a month towards the other handle's
+    // clear side — so it always follows the pointer as far as it may go.
     if (which === 'near') {
       if (months == null) return
-      if (posOf(months, maxMonths) > pos - MIN_RANGE_GAP + 1e-9) return
+      if (posOf(months, maxMonths) > pos - gap + 1e-9) months = Math.floor(monthsAt(pos - gap, maxMonths) * 10) / 10
       if (months !== near) onChange({ near: months, far })
     } else {
-      if (posOf(months, maxMonths) < nearPos + MIN_RANGE_GAP - 1e-9) return
+      if (posOf(months, maxMonths) < nearPos + gap - 1e-9) {
+        const limit = monthsAt(nearPos + gap, maxMonths)
+        months = limit == null ? null : Math.ceil(limit * 10) / 10
+      }
       if (months !== far) onChange({ near, far: months })
     }
   }
@@ -258,16 +279,16 @@ export default function TimelineSlider({
     // handle to "now" (End is a no-op — it can't be "All"), the older
     // one to the earliest stop that keeps clear of the newer handle,
     // or to "All" on End.
-    const earliestFar = () => stops.find((s) => posOf(s.months, maxMonths) >= nearPos + MIN_RANGE_GAP - 1e-9)?.months ?? far
+    const earliestFar = () => stops.find((s) => posOf(s.months, maxMonths) >= nearPos + gap - 1e-9)?.months ?? far
     const next =
       e.key === 'Home' ? (which === 'near' ? 0 : earliestFar())
       : e.key === 'End' ? null
       : stepStop(cur, maxMonths, stops, dir, which === 'near')
     if (which === 'near') {
-      if (next == null || posOf(next, maxMonths) > pos - MIN_RANGE_GAP + 1e-9) return
+      if (next == null || posOf(next, maxMonths) > pos - gap + 1e-9) return
       onChange({ near: next, far })
     } else {
-      if (posOf(next, maxMonths) < nearPos + MIN_RANGE_GAP - 1e-9) return
+      if (posOf(next, maxMonths) < nearPos + gap - 1e-9) return
       onChange({ near, far: next })
     }
   }
@@ -294,20 +315,21 @@ export default function TimelineSlider({
     if (!isRange) return onChange(months)
     const p = posOf(months, maxMonths)
     if (Math.abs(p - nearPos) < Math.abs(p - pos)) {
-      if (months != null && p <= pos - MIN_RANGE_GAP) onChange({ near: months, far })
-    } else if (p >= nearPos + MIN_RANGE_GAP) onChange({ near, far: months })
+      if (months != null && p <= pos - gap) onChange({ near: months, far })
+    } else if (p >= nearPos + gap) onChange({ near, far: months })
   }
 
   const grid = useMemo(() => {
     const dots = []
-    for (let i = 0; i <= GRID; i++) {
-      const p = i / GRID
+    const n = compact ? GRID_COMPACT : GRID
+    for (let i = 0; i <= n; i++) {
+      const p = i / n
       if (p === 0 || p === 1) continue // the end stops draw themselves
       if (stopPos.some((s) => Math.abs(s - p) < CLEARANCE)) continue
       dots.push(p)
     }
     return dots
-  }, [stopPos])
+  }, [stopPos, compact])
 
   // Colouring. A dot is "filled" when it lies inside the chosen span.
   // Preset markers carry the full accent (or a clear grey outside the
@@ -328,7 +350,8 @@ export default function TimelineSlider({
     ...stops.map((p, i) => ({ p: stopPos[i], months: p.months, label: p.label })),
     { p: 1, months: null, label: 'All' },
   ]
-  const labelled = visibleLabels(drawn.map((d) => d.p))
+  // The compact track is shorter, so labels need a bigger share of it.
+  const labelled = visibleLabels(drawn.map((d) => d.p), compact ? 0.16 : 0.09)
   const isActiveStop = (m) => (isRange ? m === far || (m != null && m === near) : isAll ? m == null : far === m)
 
   const unitSelect = (val, key, aria) => (
@@ -346,7 +369,7 @@ export default function TimelineSlider({
   )
 
   return (
-    <div className="pi-tl">
+    <div className={`pi-tl${compact ? ' pi-tl--compact' : ''}`}>
       {onModeChange && (
         <button
           type="button"
