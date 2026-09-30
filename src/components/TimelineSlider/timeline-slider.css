@@ -1,0 +1,272 @@
+/*
+ * TimelineSlider — styles. Plain CSS, no utility framework; reads only
+ * the --pi-* tokens (see ../../tokens.css). Anything that depends on the
+ * value (positions, fill colour, swell) is set inline by the component;
+ * everything else lives here.
+ */
+.pi-tl {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 16px 0 20px;
+  border-radius: 9999px;
+  background: var(--pi-bg-elev, #fff);
+  border: 1px solid var(--pi-border, #e5e5ea);
+  box-shadow: var(--pi-shadow, 0 1px 3px rgba(17, 17, 19, 0.06));
+  font-family: inherit;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── mode toggle ─────────────────────────────────────────────────── */
+.pi-tl__mode {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  margin: 0 -8px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--pi-text-muted, #6b6b72);
+  cursor: pointer;
+}
+.pi-tl__mode:hover:not(:disabled) {
+  background: var(--pi-bg-subtle, #f1f1f3);
+}
+.pi-tl__mode:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── track ───────────────────────────────────────────────────────── */
+.pi-tl__track {
+  position: relative;
+  width: 200px;
+  height: 34px;
+}
+/* The range handles are dragged with pointer events, so the browser
+   must not claim horizontal touches for scrolling. */
+.pi-tl__track--range {
+  touch-action: none;
+}
+
+.pi-tl__dot,
+.pi-tl__marker {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  transition: transform 140ms ease-out, background-color 150ms;
+}
+.pi-tl__dot {
+  top: 8.5px;
+  width: 4px;
+  height: 4px;
+}
+.pi-tl__marker {
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  box-shadow: 0 0 0 2px var(--pi-bg-elev, #fff);
+}
+
+.pi-tl__label {
+  position: absolute;
+  top: 20px;
+  transform: translateX(-50%);
+  padding: 1px 3px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--pi-text-muted, #6b6b72);
+  cursor: pointer;
+  transition: color 150ms;
+}
+.pi-tl__label--active {
+  color: var(--pi-accent, #5b5bf5);
+}
+/* A stop whose label was thinned out keeps an invisible hit area over
+   its dot, so it is still clickable (and shows its name on hover). */
+.pi-tl__label--hit {
+  top: 4px;
+  width: 12px;
+  height: 14px;
+  padding: 0;
+  font-size: 0;
+  color: transparent;
+}
+.pi-tl__label:disabled {
+  cursor: default;
+}
+
+/* ── thumb (window mode) and handles (range mode) ────────────────── */
+.pi-tl__thumb,
+.pi-tl__handle {
+  position: absolute;
+  top: 4.5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--pi-accent, #5b5bf5);
+  box-shadow: 0 0 0 3px var(--pi-accent-soft, #edecfe);
+}
+.pi-tl__thumb {
+  pointer-events: none;
+}
+.pi-tl__track:focus-within .pi-tl__thumb {
+  box-shadow: 0 0 0 2px var(--pi-bg-elev, #fff), 0 0 0 4px var(--pi-accent, #5b5bf5);
+}
+.pi-tl__handle {
+  outline: none;
+  cursor: grab;
+  transition: left 180ms var(--pi-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.pi-tl__handle:focus-visible {
+  box-shadow: 0 0 0 2px var(--pi-bg-elev, #fff), 0 0 0 4px var(--pi-accent, #5b5bf5);
+}
+.pi-tl__handle[aria-disabled='true'],
+.pi-tl__thumb[aria-disabled='true'] {
+  opacity: 0.35;
+  cursor: default;
+}
+.pi-tl__track[data-active] .pi-tl__handle,
+.pi-tl__track[data-active] .pi-tl__span {
+  transition: none;
+  cursor: grabbing;
+}
+
+/* The faint span drawn between the two range handles. */
+.pi-tl__span {
+  position: absolute;
+  top: 10px;
+  height: 1.5px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--pi-accent, #5b5bf5) 35%, transparent);
+  pointer-events: none;
+  transition:
+    left 180ms var(--pi-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    width 180ms var(--pi-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+/* Window mode: the native range input sits invisibly over the dots so
+   keyboard, touch and screen readers work for free. */
+.pi-tl__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.pi-tl__input:disabled {
+  cursor: default;
+}
+
+/* ── readout + editor (they swap by sliding) ─────────────────────── */
+.pi-tl__edit {
+  display: flex;
+  align-items: center;
+}
+
+.pi-tl__editor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  /* room so the focus ring of the fields isn't clipped */
+  padding: 2px;
+  margin: -2px;
+  transition:
+    max-width 280ms var(--pi-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    opacity 220ms ease-out;
+}
+.pi-tl__editor[data-open='true'] {
+  max-width: 160px;
+  opacity: 1;
+}
+.pi-tl__editor[data-open='true'][data-range='true'] {
+  max-width: 300px;
+}
+
+.pi-tl__num,
+.pi-tl__unit {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border-radius: 6px;
+  background: var(--pi-bg-subtle, #f1f1f3);
+  border: 1px solid var(--pi-border, #e5e5ea);
+  color: var(--pi-text, #111113);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  outline: none;
+}
+.pi-tl__num {
+  width: 48px;
+  padding: 2px 6px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.pi-tl__unit {
+  padding: 2px 4px;
+  cursor: pointer;
+}
+.pi-tl__num:focus,
+.pi-tl__unit:focus {
+  box-shadow: 0 0 0 1px var(--pi-accent, #5b5bf5);
+}
+.pi-tl__sep {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--pi-text-dim, #96969d);
+}
+
+.pi-tl__readout {
+  min-width: 34px;
+  max-width: 130px;
+  padding: 2px 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--pi-text, #111113);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  cursor: pointer;
+  transition:
+    max-width 280ms var(--pi-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    min-width 280ms var(--pi-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    padding 280ms var(--pi-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    opacity 220ms ease-out,
+    background-color 150ms;
+}
+.pi-tl__readout:hover:not(:disabled) {
+  background: var(--pi-bg-subtle, #f1f1f3);
+}
+.pi-tl__readout:disabled {
+  cursor: default;
+}
+.pi-tl__readout[data-open='true'] {
+  min-width: 0;
+  max-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  opacity: 0;
+}
